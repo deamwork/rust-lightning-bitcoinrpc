@@ -1,8 +1,3 @@
-extern crate futures;
-extern crate hyper;
-extern crate bytes;
-extern crate base64;
-extern crate config;
 extern crate exit_future;
 extern crate ln_primitives;
 extern crate sr_primitives;
@@ -20,8 +15,7 @@ use futures::future::Future;
 use futures::sync::mpsc;
 use exit_future::Exit;
 
-mod lnbridge;
-use lnbridge::settings::Settings;
+use ln_manager::ln_bridge::settings::Settings;
 
 use sr_primitives::traits::{self, ProvideRuntimeApi};
 pub use ln_primitives::LnApi;
