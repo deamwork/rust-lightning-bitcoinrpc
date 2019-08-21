@@ -8,6 +8,7 @@ sr-primitives = { path = "../../../substrate/core/sr-primitives" }
 substrate-service = { path = "../../../substrate/core/service" }
 ln-manager = { path = "../ln-manager" }
 exit-future = "0.1"
+futures = { package = "futures-preview", version = "0.3.0-alpha.18" }
 
 [features]
 default = ["std"]
