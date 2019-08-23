@@ -200,7 +200,7 @@ impl<T: Larva> LnManager<T> {
         info!("Lightning Port binded on 0.0.0.0:{}", &settings.lightning.port);
         let setup_larva = larva.clone();
         let listener =
-            tokio_tcp::TcpListener::bind(&format!("0.0.0.0:{}", settings.lightning.port).parse().unwrap())
+            tokio::net::tcp::TcpListener::bind(&format!("0.0.0.0:{}", settings.lightning.port).parse().unwrap())
             .unwrap();
 
         let _ = larva.clone().spawn_task(
