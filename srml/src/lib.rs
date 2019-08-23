@@ -1,3 +1,4 @@
+extern crate futures;
 extern crate exit_future;
 extern crate ln_primitives;
 extern crate sr_primitives;
@@ -31,7 +32,7 @@ impl Drone {
     Self { spawn_task_handle, exit }
   }
 }
-impl Larva for Drone<T> {
+impl Larva for Drone {
   fn spawn_task(
     &self,
     task: impl Future<Item = (), Error = ()> + Send + 'static
