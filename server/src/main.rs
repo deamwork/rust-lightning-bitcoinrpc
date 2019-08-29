@@ -55,6 +55,7 @@ fn main() {
     let node_conf = NodeSettings::new(node_conf_arg).unwrap();
 
     let log_file_name = format!("server_{}.log", &node_conf.server.address);
+    let res = TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed);
 
     CombinedLogger::init(vec![
         TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed).unwrap(),

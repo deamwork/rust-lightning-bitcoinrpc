@@ -24,7 +24,7 @@ def print_error(message):
     print("{} \x1b[1;31m[ERROR]\x1b[0m {} ... ".format(get_now(), message))
 
 def get_env(test_version):
-    working_dir = os.getcwd() + "/../../"
+    working_dir = os.getcwd() + "/"
     server_dir = working_dir + "server/"
     client_dir = working_dir + "cli/"
     conf_dir = working_dir + "test/conf/"
@@ -63,10 +63,13 @@ def sleep(action, secs):
 
 def build(project, version, env):
     print_info("building {} version: {}".format(project, version))
+    print_info("move to {}".format(env[project]["root"]))
     os.chdir(env[project]["root"])
 
-    if subprocess.run(["cargo", "build"]).returncode != 0:
-        return print_error("build Error")
+    result = subprocess.run(["/root/.cargo/bin/cargo", "build"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    if result.returncode != 0:
+        print_error(result.stderr)
+        raise Exception("Build error")
     print_pass("build success, {} is ready".format(project))
     return env[project]["test"]
 
@@ -114,6 +117,7 @@ def fund(addr, amount, cli):
     res = cli.req("sendtoaddress", [addr, amount])
     print_info("funded {}BTC to {}, tx_id: {}".format(amount, addr, res['result']))
 
+HOST = "lightning"
 
 class BitcoinClient:
     def __init__(self, rpc_url):
@@ -143,7 +147,7 @@ class TestCases(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.client = BitcoinClient("admin1:123@127.0.0.1:19001")
+        self.client = BitcoinClient("admin1:123@regtest-0:19001")
         self.env = get_env("debug")
         self.server_build_dir = build("server", "debug", self.env)
         self.cli_build_dir = build("cli", "debug", self.env)
@@ -187,10 +191,10 @@ class TestCases(unittest.TestCase):
         sleep("generate blocks", 5)
         return
     def test_1_info_node(self):
-        node_1 = run_cli(self.cli_build_dir, self.env, ["info", "-a"])
+        node_1 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8123".format(HOST) , "info", "-a"])
         self.assertEqual(len(node_1["imported_addresses"]), 2, "imported error")
         print_pass("got node #1 addresses: {}".format(node_1))
-        node_2 = run_cli(self.cli_build_dir, self.env, ["-n", "127.0.0.1:8124", "info", "-a"])
+        node_2 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8124".format(HOST), "info", "-a"])
         self.assertEqual(len(node_2["imported_addresses"]), 2, "imported error")
         print_pass("got node #2 addresses: {}".format(node_2))
         addrs = node_1['imported_addresses'] + node_2['imported_addresses']
@@ -203,7 +207,7 @@ class TestCases(unittest.TestCase):
         print_pass("got node #1 public key: {}".format(node_1["node_id"]))
         self.assertIsNotNone(node_1["node_id"])
         self.__class__.node_id_1 = node_1["node_id"]
-        node_2 = run_cli(self.cli_build_dir, self.env, ["-n", "127.0.0.1:8124", "info", "-n"])
+        node_2 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8124".format(HOST), "info", "-n"])
         print_pass("got node #2 public key: {}".format(node_2["node_id"]))
         self.assertIsNotNone(node_2["node_id"])
         self.__class__.node_id_2 = node_2["node_id"]
@@ -211,13 +215,13 @@ class TestCases(unittest.TestCase):
     def test_2_0_peer_connect(self):
         connect = run_cli(
             self.cli_build_dir, self.env,
-            ["peer", "-c", "{}@{}:{}".format(self.node_id_2, "127.0.0.1", "9736")]
+            ["peer", "-c", "{}@{}:{}".format(self.node_id_2, HOST, "9736")]
         )
         print_pass("got connection: {}".format(connect))
         self.assertIsNotNone(connect["response"])
         return
     def test_2_1_peers(self):
-        r4 = run_cli(self.cli_build_dir, self.env, ["-n", "127.0.0.1:8124", "peer", "-l"])
+        r4 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8124".format(HOST), "peer", "-l"])
         print_pass("got node #2 peers: {}".format(r4))
         self.assertTrue(len(r4["peers"]) > 0)
         return
@@ -234,7 +238,7 @@ class TestCases(unittest.TestCase):
         self.assertTrue(len(r6["channels"]) > 0)
         return
     def test_3_2_node_2_channel_list(self):
-        r7 = run_cli(self.cli_build_dir, self.env, ["-n", "127.0.0.1:8124", "channel", "-l", "all"])
+        r7 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8124".format(HOST), "channel", "-l", "all"])
         print_pass("got channel list node #2: {}".format(r7))
         self.assertTrue(len(r7["channels"]) > 0)
         return
@@ -250,11 +254,11 @@ class TestCases(unittest.TestCase):
         r151 = run_cli(self.cli_build_dir, self.env, ["channel", "-l", "all"])
         print_pass("got channel list: {}".format(r151))
         self.assertTrue("error" not in r151)
-        r152 = run_cli(self.cli_build_dir, self.env, ["-n", "127.0.0.1:8124", "channel", "-l", "all"])
+        r152 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8124".format(HOST), "channel", "-l", "all"])
         print_pass("got channel list node #2: {}".format(r152))
         self.assertTrue("error" not in r152)
         self.generate_block(10)
-        r16 = run_cli(self.cli_build_dir, self.env, ["-n", "127.0.0.1:8124", "invoice", "-p", r15["invoice"]])
+        r16 = run_cli(self.cli_build_dir, self.env, ["-n", "{}:8124".format(HOST), "invoice", "-p", r15["invoice"]])
         print_info("pay invoice: {}".format(r16))
         self.assertTrue("error" not in r16)
         return
@@ -285,7 +289,7 @@ def test():
     subprocess.run(["rm", "-rf", data_dir])
 
     # Establish Bitcoind RPC
-    bitcoin_cli = BitcoinClient("admin1:123@127.0.0.1:19011")
+    bitcoin_cli = BitcoinClient("admin1:123@regtest-1:19011")
     info = bitcoin_cli.req("getblockchaininfo", [])
     print_info("current block height: {}".format(info["result"]["blocks"]))
     print_info("best block hash: {}".format(info["result"]["bestblockhash"]))
