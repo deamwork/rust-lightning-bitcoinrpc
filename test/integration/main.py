@@ -3,6 +3,9 @@ import subprocess, json
 import requests
 from requests.auth import HTTPBasicAuth
 
+HOST = "lightning"
+NODE_0 = "regtest-0"
+
 # Print Messages
 def get_now():
     now = datetime.datetime.utcnow()
@@ -117,7 +120,7 @@ def fund(addr, amount, cli):
     res = cli.req("sendtoaddress", [addr, amount])
     print_info("funded {}BTC to {}, tx_id: {}".format(amount, addr, res['result']))
 
-HOST = "lightning"
+
 
 class BitcoinClient:
     def __init__(self, rpc_url):
@@ -143,11 +146,11 @@ class BitcoinClient:
         self.payload["params"] = params
         return self.raw_request(self.rpc_url, data=json.dumps(self.payload), headers=self.headers)
 
+# not a real unittest
 class TestCases(unittest.TestCase):
-
     @classmethod
     def setUpClass(self):
-        self.client = BitcoinClient("admin1:123@regtest-0:19001")
+        self.client = BitcoinClient("admin1:123@{}:19001".format(NODE_0))
         self.env = get_env("debug")
         self.server_build_dir = build("server", "debug", self.env)
         self.cli_build_dir = build("cli", "debug", self.env)
