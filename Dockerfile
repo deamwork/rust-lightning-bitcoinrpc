@@ -1,8 +1,8 @@
 FROM jasongop/rust-wasm32:1.39.0-nightly as rustenv
 
 RUN set -x \
-  && apt-get update \
-  && apt-get install -y python3 python3-pip \
+#  && apt-get update \
+#  && apt-get install -y python3 python3-pip \
   && pip3 install --upgrade pip==9.0.3 \
   && mkdir -p /output/{server,cli}
 
