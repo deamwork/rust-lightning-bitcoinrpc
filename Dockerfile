@@ -25,9 +25,9 @@ WORKDIR /lightning
 
 COPY . /lightning
 
-RUN set -x \
-  && cd test/integration \
-  && pip3 install --user -r requirements.txt
+#RUN set -x \
+#  && cd test/integration \
+#  && pip3 install --user -r requirements.txt
 
 ARG BUILD_TYPE=debug
 ENV FINAL_TYPE=$BUILD_TYPE
@@ -58,9 +58,11 @@ COPY --from=rustenv /output .
 # Copy python script in `test`
 COPY --from=rustenv /lightning/test ./test
 # Copy python packages from requirements.txt after fetch & build
-COPY --from=rustenv /root/.local /root/.local
+# COPY --from=rustenv /root/.local /root/.local
 # and set env for python3 and cli
-ENV PATH=/root/.local/bin:/app/cli/$VER:$PATH
+ENV PATH=/app/cli/$VER:$PATH
+RUN cd test/intergration \
+  && pip install --no-cache-dir -r requirements.txt
 
 # Run script
 CMD ["python3", "test/integration/main.py"]
