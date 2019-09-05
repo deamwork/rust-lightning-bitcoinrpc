@@ -61,7 +61,7 @@ COPY --from=rustenv /lightning/test ./test
 # COPY --from=rustenv /root/.local /root/.local
 # and set env for python3 and cli
 ENV PATH=/app/cli/$VER:$PATH
-RUN cd test/intergration \
+RUN cd test/integration \
   && pip install --no-cache-dir -r requirements.txt
 
 # Run script
